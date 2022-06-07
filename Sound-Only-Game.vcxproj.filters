@@ -19,4 +19,30 @@
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="resources\death.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="resources\gameover.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="resources\Monster-Snoring.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="resources\shock-wall.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="resources\step-human.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="resources\step-monster.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="resources\victory.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="resources\waterfall.wav">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+  </ItemGroup>
 </Project>

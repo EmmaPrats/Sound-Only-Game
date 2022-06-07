@@ -21,6 +21,16 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="resources\death.wav" />
+    <Media Include="resources\gameover.wav" />
+    <Media Include="resources\Monster-Snoring.wav" />
+    <Media Include="resources\shock-wall.wav" />
+    <Media Include="resources\step-human.wav" />
+    <Media Include="resources\step-monster.wav" />
+    <Media Include="resources\victory.wav" />
+    <Media Include="resources\waterfall.wav" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
