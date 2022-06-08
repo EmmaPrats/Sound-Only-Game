@@ -54,15 +54,14 @@ int waterfallSoundChannel;
 bool walls[10][10] =
 {
 	true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
-	true, false, false,  true, false, false, false,  true, false,  true,
-	true, false, false,  true, false, false, false,  true, false,  true,
-	true, false, false,  true, false, false, false,  true, false,  true,
-	true, false, false, false, false, false, false,  true, false,  true,
-	true, false, false, false, false, false, false,  true, false,  true,
-	true, false,  true, false,  true, false, false, false, false,  true,
-	true, false, false, false,  true, false, false, false, false,  true,
-	true, false, false, false,  true, false, false, false, false,  true,
-	true,  true,  true,  true,  true,  true,  true,  true,  true,  true
+	true, false, false, false, false, false, false, false, false,  true,
+	true, false, false, false, false, false,  true, false, false,  true,
+	true,  true,  true,  true, false, false, false, false, false,  true,
+	true, false, false, false, false, false,  true,  true,  true,  true,
+	true, false, false, false, false, false, false, false, false,  true,
+	true, false, false, false, false, false, false, false, false,  true,
+	true,  true,  true,  true,  true,  true, false, false, false,  true,
+	true, false, false, false, false, false, false, false, false,  true
 };
 
 unsigned char waterfallPosition[2] = { 8, 1 };
@@ -173,6 +172,8 @@ void init3D()
 	playerPosition[0] = 2;
 	playerPosition[1] = 2;
 
+	printf("\tPlayer starts at (%d, %d)\n", playerPosition[0], playerPosition[1]);
+
 	playerForward[0] = 0;
 	playerForward[1] = 1;
 
@@ -230,6 +231,40 @@ void update()
 	{
 		printf("Up input.\n");
 		upInput = false;
+
+		unsigned short targetPosition[2];
+
+		if (playerForward[0] == 1)
+		{
+			targetPosition[0] = playerPosition[0] + 1;
+			targetPosition[1] = playerPosition[1];
+		}
+		else if (playerForward[0] == -1)
+		{
+			targetPosition[0] = playerPosition[0] - 1;
+			targetPosition[1] = playerPosition[1];
+		}
+		else if (playerForward[1] == 1)
+		{
+			targetPosition[0] = playerPosition[0];
+			targetPosition[1] = playerPosition[1] + 1;
+		}
+		else if (playerForward[1] == -1)
+		{
+			targetPosition[0] = playerPosition[0];
+			targetPosition[1] = playerPosition[1] - 1;
+		}
+
+		if (walls[targetPosition[0]][targetPosition[1]])
+		{
+			printf("\tTarget position (%d, %d) is a wall.\n", targetPosition[0], targetPosition[1]);
+		}
+		else
+		{
+			playerPosition[0] = targetPosition[0];
+			playerPosition[1] = targetPosition[1];
+			printf("\tPlayer moved to (%d, %d)\n", playerPosition[0], playerPosition[1]);
+		}
 	}
 }
 
