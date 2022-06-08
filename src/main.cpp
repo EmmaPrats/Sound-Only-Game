@@ -47,6 +47,33 @@ int waterfallSoundChannel;
 
 ////////////////////////////
 
+///////// GEOMETRY /////////
+
+// True if wall, false if no wall.
+// walls[0][0] is bottom left corner, walls[9][0] is bottom right corner.
+bool walls[10][10] =
+{
+	true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+	true, false, false,  true, false, false, false,  true, false,  true,
+	true, false, false,  true, false, false, false,  true, false,  true,
+	true, false, false,  true, false, false, false,  true, false,  true,
+	true, false, false, false, false, false, false,  true, false,  true,
+	true, false, false, false, false, false, false,  true, false,  true,
+	true, false,  true, false,  true, false, false, false, false,  true,
+	true, false, false, false,  true, false, false, false, false,  true,
+	true, false, false, false,  true, false, false, false, false,  true,
+	true,  true,  true,  true,  true,  true,  true,  true,  true,  true
+};
+
+std::vector<short> playerPosition;
+std::vector<short> playerForward;
+
+std::vector<short> monsterPosition;
+
+std::vector<short> waterfallPosition;
+
+////////////////////////////
+
 bool initSDL();
 void init3D();
 void initMusic();
