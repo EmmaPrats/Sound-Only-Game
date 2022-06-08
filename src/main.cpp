@@ -65,12 +65,12 @@ bool walls[10][10] =
 	true,  true,  true,  true,  true,  true,  true,  true,  true,  true
 };
 
-std::vector<short> playerPosition;
-std::vector<short> playerForward;
+short waterfallPosition[2] = { 8, 1 };
 
-std::vector<short> monsterPosition;
+short playerPosition[2];
+short playerForward[2];
 
-std::vector<short> waterfallPosition;
+short monsterPosition[2];
 
 ////////////////////////////
 
@@ -156,7 +156,14 @@ bool initSDL()
 
 void init3D()
 {
-	//TODO fill matrix, position elements.
+	playerPosition[0] = 2;
+	playerPosition[1] = 2;
+
+	playerForward[0] = 0;
+	playerForward[1] = 1;
+
+	monsterPosition[0] = 5;
+	monsterPosition[1] = 6;
 
 	Mix_SetPosition(waterfallSoundChannel, 180, 10);
 }
