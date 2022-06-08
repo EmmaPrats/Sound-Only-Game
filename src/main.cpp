@@ -16,6 +16,8 @@ SDL_Surface* screenSurface = NULL;
 int lastTime = 0, currentTime, deltaTime;
 float msFrame = 1 / (FPS / 1000.0f);
 
+////////// SOUNDS //////////
+
 const char* deathSoundFile = "resources/death.wav";
 const char* gameOverSoundFile = "resources/gameover.wav";
 const char* monsterSnoringSoundFile = "resources/Monster-Snoring.wav";
@@ -24,6 +26,26 @@ const char* stepHumanSoundFile = "resources/step-human.wav";
 const char* stepMonsterSoundFile = "resources/step-monster.wav";
 const char* victorySoundFile = "resources/victory.wav";
 const char* waterfallSoundFile = "resources/waterfall.wav";
+
+Mix_Chunk* deathSound;
+Mix_Chunk* gameOverSound;
+Mix_Chunk* monsterSnoringSound;
+Mix_Chunk* hitWallSound;
+Mix_Chunk* stepHumanSound;
+Mix_Chunk* stepMonsterSound;
+Mix_Chunk* victorySound;
+Mix_Chunk* waterfallSound;
+
+int deathSoundChannel;
+int gameOverSoundChannel;
+int monsterSnoringSoundChannel;
+int hitWallSoundChannel;
+int stepHumanSoundChannel;
+int stepMonsterSoundChannel;
+int victorySoundChannel;
+int waterfallSoundChannel;
+
+////////////////////////////
 
 bool initSDL();
 void init3D();
@@ -108,6 +130,8 @@ bool initSDL()
 void init3D()
 {
 	//TODO fill matrix, position elements.
+
+	Mix_SetPosition(waterfallSoundChannel, 180, 10);
 }
 
 void initMusic()
@@ -115,42 +139,33 @@ void initMusic()
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024); //or 4096?
 	Mix_Init(MIX_INIT_OGG);
 
-	Mix_Chunk* waterfall = Mix_LoadWAV(waterfallSoundFile);
-	Mix_Chunk* deathSound = Mix_LoadWAV(deathSoundFile);
-	Mix_Chunk* gameOverSound = Mix_LoadWAV(gameOverSoundFile);
-	Mix_Chunk* monsterSnoringSound = Mix_LoadWAV(monsterSnoringSoundFile);
-	Mix_Chunk* hitWallSound = Mix_LoadWAV(hitWallSoundFile);
-	Mix_Chunk* stepHumanSound = Mix_LoadWAV(stepHumanSoundFile);
-	Mix_Chunk* stepMonsterSound = Mix_LoadWAV(stepMonsterSoundFile);
-	Mix_Chunk* victorySound = Mix_LoadWAV(victorySoundFile);
-	Mix_Chunk* waterfallSound = Mix_LoadWAV(waterfallSoundFile);
+	deathSound = Mix_LoadWAV(deathSoundFile);
+	gameOverSound = Mix_LoadWAV(gameOverSoundFile);
+	monsterSnoringSound = Mix_LoadWAV(monsterSnoringSoundFile);
+	hitWallSound = Mix_LoadWAV(hitWallSoundFile);
+	stepHumanSound = Mix_LoadWAV(stepHumanSoundFile);
+	stepMonsterSound = Mix_LoadWAV(stepMonsterSoundFile);
+	victorySound = Mix_LoadWAV(victorySoundFile);
+	waterfallSound = Mix_LoadWAV(waterfallSoundFile);
 
-	if (!waterfall)
-		printf("Error loading waterfall.");
+	if (!deathSound)
+		std::cout << "Error loading \"" << deathSoundFile << "\"." << std::endl;
+	if (!gameOverSound)
+		std::cout << "Error loading \"" << gameOverSoundFile << "\"." << std::endl;
+	if (!monsterSnoringSound)
+		std::cout << "Error loading \"" << monsterSnoringSoundFile << "\"." << std::endl;
+	if (!hitWallSound)
+		std::cout << "Error loading \"" << hitWallSoundFile << "\"." << std::endl;
+	if (!stepHumanSound)
+		std::cout << "Error loading \"" << stepHumanSoundFile << "\"." << std::endl;
+	if (!stepMonsterSound)
+		std::cout << "Error loading \"" << stepMonsterSoundFile << "\"." << std::endl;
+	if (!victorySound)
+		std::cout << "Error loading \"" << victorySoundFile << "\"." << std::endl;
+	if (!waterfallSound)
+		std::cout << "Error loading \"" << waterfallSoundFile << "\"." << std::endl;
 
-	int waterfallChannel = Mix_PlayChannel(-1, waterfall, -1);
-	Mix_SetPosition(waterfallChannel, 180, 10);
-
-	//	close();
-	//	exit(1);
-	//}
-	//Mix_PlayMusic(mySong, 0);
-	//MusicCurrentTime = 0;
-	//MusicCurrentTimeBeat = 0;
-	//MusicCurrentBeat = 0;
-	//MusicPreviousBeat = -1;
-	//
-	//bulk = BASE_BULK_MODIFIER;
-	//uniformScale = BASE_SCALE;
-	
-	////Load Audios
-	//Mix_Chunk* loadSound;
-	//loadSound = Mix_LoadWAV("Assets/track01.ogg");
-	//audios.push_back(loadSound);
-	//loadSound = Mix_LoadWAV("Assets/track02.ogg");
-	//audios.push_back(loadSound);
-	//loadSound = Mix_LoadWAV("Assets/track03.ogg");
-	//audios.push_back(loadSound);
+	waterfallSoundChannel = Mix_PlayChannel(-1, waterfallSound, -1);
 }
 
 void update()
@@ -169,13 +184,6 @@ void waitForNextFrame()
 
 void close()
 {
-	//free(zbuffer);
-	//free(org.vertices);
-	//free(org.normals);
-	//free(cur.vertices);
-	//free(cur.normals);
-	//free(polies);
-
 	Mix_CloseAudio();
 	
 	SDL_FreeSurface(screenSurface);
@@ -186,8 +194,3 @@ void close()
 	
 	SDL_Quit();
 }
-
-
-//SDL_Renderer* gMyRenderer = NULL;
-
-//	SDL_DestroyRenderer(gMyRenderer);
