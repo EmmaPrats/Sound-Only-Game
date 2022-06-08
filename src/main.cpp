@@ -69,6 +69,7 @@ bool walls[10][10] =
 	true, false, false, false, false, false, false, false, false,  true,
 	true,  true,  true,  true,  true,  true,  true,  true,  true,  true
 };
+const float diagonal = sqrt(9 * 9 + 9 * 9);
 
 unsigned char waterfallPosition[2] = { 8, 1 };
 
@@ -100,6 +101,21 @@ void initMusic();
 void update();
 void waitForNextFrame();
 void close();
+
+void updatePlayerOrientation(signed char horizontalInput);
+void updateRelativePositions();
+
+void updateSounds();
+
+float changedInScale(float value, float oldMin, float oldMax, float newMin, float newMax)
+{
+	return (newMax - newMin) / (oldMax - oldMin) * (value - oldMin) + newMin;
+}
+
+Uint8 getDistance(float distance)
+{
+	return changedInScale(distance, 0, diagonal, 0, 255);
+}
 
 int main(int argc, char* args[])
 {
@@ -193,7 +209,7 @@ void init3D()
 	monsterPosition[0] = 5;
 	monsterPosition[1] = 6;
 
-	Mix_SetPosition(waterfallSoundChannel, 180, 10);
+	updateRelativePositions();
 }
 
 void initMusic()
@@ -228,7 +244,81 @@ void initMusic()
 		std::cout << "Error loading \"" << waterfallSoundFile << "\"." << std::endl;
 
 	waterfallSoundChannel = Mix_PlayChannel(-1, waterfallSound, -1);
+	monsterSnoringSoundChannel = Mix_PlayChannel(-1, monsterSnoringSound, -1);
+
+	Mix_Volume(waterfallSoundChannel, 64);
+
+	updateSounds();
 }
+
+void update()
+{
+	//Handling horizontal input first because it's less punishing.
+	if (horizontalInput != 0)
+	{
+		printf("Horizontal input: %d\n", horizontalInput);
+		
+		updatePlayerOrientation(horizontalInput);
+
+		updateRelativePositions();
+
+		updateSounds();
+
+		horizontalInput = 0;
+	}
+	else if (upInput)
+	{
+		printf("Up input.\n");
+		upInput = false;
+
+		unsigned short targetPosition[2];
+
+		switch (playerOrientation)
+		{
+		case UP:
+			targetPosition[0] = playerPosition[0];
+			targetPosition[1] = playerPosition[1] + 1;
+			break;
+		case DOWN:
+			targetPosition[0] = playerPosition[0];
+			targetPosition[1] = playerPosition[1] - 1;
+			break;
+		case LEFT:
+			targetPosition[0] = playerPosition[0] - 1;
+			targetPosition[1] = playerPosition[1];
+			break;
+		case RIGHT:
+			targetPosition[0] = playerPosition[0] + 1;
+			targetPosition[1] = playerPosition[1];
+			break;
+		}
+
+		if (walls[targetPosition[0]][targetPosition[1]])
+		{
+			printf("\tTarget position (%d, %d) is a wall.\n", targetPosition[0], targetPosition[1]);
+		}
+		else
+		{
+			playerPosition[0] = targetPosition[0];
+			playerPosition[1] = targetPosition[1];
+			printf("\tPlayer moved to (%d, %d)\n", playerPosition[0], playerPosition[1]);
+
+			if (playerPosition[0] == monsterPosition[0] &&
+				playerPosition[1] == monsterPosition[1])
+			{
+				printf("Monster ate player.\n");
+			}
+			else if (playerPosition[0] == waterfallPosition[0] &&
+				playerPosition[1] == waterfallPosition[1])
+			{
+				printf("Player arrived to exit.\n");
+			}
+		}
+
+		updateSounds();
+	}
+}
+
 
 void updatePlayerOrientation(signed char horizontalInput)
 {
@@ -324,68 +414,17 @@ void updateRelativePositions()
 	printf("\t\tmonsterAngleFromPlayerPOV: %f\n", monsterAngleFromPlayerPOV);
 }
 
-void update()
+void updateSounds()
 {
-	//Handling horizontal input first because it's less punishing.
-	if (horizontalInput != 0)
-	{
-		printf("Horizontal input: %d\n", horizontalInput);
-		
-		updatePlayerOrientation(horizontalInput);
+	float waterfallDistance = sqrt(
+		waterfallPositionFromPlayerPOV[0] * waterfallPositionFromPlayerPOV[0] +
+		waterfallPositionFromPlayerPOV[1] * waterfallPositionFromPlayerPOV[1]);
+	Mix_SetPosition(waterfallSoundChannel, waterfallAngleFromPlayerPOV + 360, getDistance(waterfallDistance));
 
-		updateRelativePositions();
-
-		horizontalInput = 0;
-	}
-	else if (upInput)
-	{
-		printf("Up input.\n");
-		upInput = false;
-
-		unsigned short targetPosition[2];
-
-		switch (playerOrientation)
-		{
-		case UP:
-			targetPosition[0] = playerPosition[0];
-			targetPosition[1] = playerPosition[1] + 1;
-			break;
-		case DOWN:
-			targetPosition[0] = playerPosition[0];
-			targetPosition[1] = playerPosition[1] - 1;
-			break;
-		case LEFT:
-			targetPosition[0] = playerPosition[0] - 1;
-			targetPosition[1] = playerPosition[1];
-			break;
-		case RIGHT:
-			targetPosition[0] = playerPosition[0] + 1;
-			targetPosition[1] = playerPosition[1];
-			break;
-		}
-
-		if (walls[targetPosition[0]][targetPosition[1]])
-		{
-			printf("\tTarget position (%d, %d) is a wall.\n", targetPosition[0], targetPosition[1]);
-		}
-		else
-		{
-			playerPosition[0] = targetPosition[0];
-			playerPosition[1] = targetPosition[1];
-			printf("\tPlayer moved to (%d, %d)\n", playerPosition[0], playerPosition[1]);
-
-			if (playerPosition[0] == monsterPosition[0] &&
-				playerPosition[1] == monsterPosition[1])
-			{
-				printf("Monster ate player.\n");
-			}
-			else if (playerPosition[0] == waterfallPosition[0] &&
-				playerPosition[1] == waterfallPosition[1])
-			{
-				printf("Player arrived to exit.\n");
-			}
-		}
-	}
+	float monsterDistance = sqrt(
+		monsterPositionFromPlayerPOV[0] * monsterPositionFromPlayerPOV[0] +
+		monsterPositionFromPlayerPOV[1] * monsterPositionFromPlayerPOV[1]);
+	Mix_SetPosition(monsterSnoringSoundChannel, monsterAngleFromPlayerPOV + 360, getDistance(monsterDistance));
 }
 
 void waitForNextFrame()
