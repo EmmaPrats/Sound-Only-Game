@@ -75,7 +75,6 @@ unsigned char waterfallPosition[2] = { 8, 1 };
 enum ORIENTATIONS { UP, DOWN, RIGHT, LEFT };
 
 unsigned char playerPosition[2];
-unsigned char playerForward[2];
 ORIENTATIONS playerOrientation;
 
 unsigned char monsterPosition[2];
@@ -189,8 +188,6 @@ void init3D()
 
 	printf("\tPlayer starts at (%d, %d)\n", playerPosition[0], playerPosition[1]);
 
-	playerForward[0] = 0;
-	playerForward[1] = 1;
 	playerOrientation = UP;
 
 	monsterPosition[0] = 5;
@@ -329,8 +326,6 @@ void updateRelativePositions()
 
 void update()
 {
-	//TODO handle input.
-
 	//Handling horizontal input first because it's less punishing.
 	if (horizontalInput != 0)
 	{
@@ -369,27 +364,6 @@ void update()
 			break;
 		}
 
-		//if (playerForward[0] == 1)
-		//{
-		//	targetPosition[0] = playerPosition[0] + 1;
-		//	targetPosition[1] = playerPosition[1];
-		//}
-		//else if (playerForward[0] == -1)
-		//{
-		//	targetPosition[0] = playerPosition[0] - 1;
-		//	targetPosition[1] = playerPosition[1];
-		//}
-		//else if (playerForward[1] == 1)
-		//{
-		//	targetPosition[0] = playerPosition[0];
-		//	targetPosition[1] = playerPosition[1] + 1;
-		//}
-		//else if (playerForward[1] == -1)
-		//{
-		//	targetPosition[0] = playerPosition[0];
-		//	targetPosition[1] = playerPosition[1] - 1;
-		//}
-
 		if (walls[targetPosition[0]][targetPosition[1]])
 		{
 			printf("\tTarget position (%d, %d) is a wall.\n", targetPosition[0], targetPosition[1]);
@@ -399,6 +373,17 @@ void update()
 			playerPosition[0] = targetPosition[0];
 			playerPosition[1] = targetPosition[1];
 			printf("\tPlayer moved to (%d, %d)\n", playerPosition[0], playerPosition[1]);
+
+			if (playerPosition[0] == monsterPosition[0] &&
+				playerPosition[1] == monsterPosition[1])
+			{
+				printf("Monster ate player.\n");
+			}
+			else if (playerPosition[0] == waterfallPosition[0] &&
+				playerPosition[1] == waterfallPosition[1])
+			{
+				printf("Player arrived to exit.\n");
+			}
 		}
 	}
 }
