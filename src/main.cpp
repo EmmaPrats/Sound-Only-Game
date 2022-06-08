@@ -66,7 +66,8 @@ bool walls[10][10] =
 	true, false, false, false, false, false, false, false, false,  true,
 	true, false, false, false, false, false, false, false, false,  true,
 	true,  true,  true,  true,  true,  true, false, false, false,  true,
-	true, false, false, false, false, false, false, false, false,  true
+	true, false, false, false, false, false, false, false, false,  true,
+	true,  true,  true,  true,  true,  true,  true,  true,  true,  true
 };
 
 unsigned char waterfallPosition[2] = { 8, 1 };
