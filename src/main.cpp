@@ -219,15 +219,17 @@ void initMusic()
 void update()
 {
 	//TODO handle input.
-	if (upInput)
-	{
-		printf("Up input.\n");
-		upInput = false;
-	}
+
+	//Handling horizontal input first because it's less punishing.
 	if (horizontalInput != 0)
 	{
 		printf("Horizontal input: %d\n", horizontalInput);
 		horizontalInput = 0;
+	}
+	else if (upInput)
+	{
+		printf("Up input.\n");
+		upInput = false;
 	}
 }
 
