@@ -2,7 +2,10 @@
 #include <SDL_mixer.h>
 #include <iostream>
 #include <string>
-#include <vector>
+#include <cmath>
+
+#include "vector.h"
+#include "matrix.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -15,6 +18,8 @@ SDL_Surface* screenSurface = NULL;
 #define FPS 60
 int lastTime = 0, currentTime, deltaTime;
 float msFrame = 1 / (FPS / 1000.0f);
+
+#define PI 3.14159265
 
 ////////// SOUNDS //////////
 
@@ -66,10 +71,19 @@ bool walls[10][10] =
 
 unsigned char waterfallPosition[2] = { 8, 1 };
 
+enum ORIENTATIONS { UP, DOWN, RIGHT, LEFT };
+
 unsigned char playerPosition[2];
 unsigned char playerForward[2];
+ORIENTATIONS playerOrientation;
 
 unsigned char monsterPosition[2];
+
+signed char waterfallPositionFromPlayerPOV[2];
+float waterfallAngleFromPlayerPOV;
+
+signed char monsterPositionFromPlayerPOV[2];
+float monsterAngleFromPlayerPOV;
 
 ////////////////////////////
 
@@ -176,6 +190,7 @@ void init3D()
 
 	playerForward[0] = 0;
 	playerForward[1] = 1;
+	playerOrientation = UP;
 
 	monsterPosition[0] = 5;
 	monsterPosition[1] = 6;
@@ -217,6 +232,100 @@ void initMusic()
 	waterfallSoundChannel = Mix_PlayChannel(-1, waterfallSound, -1);
 }
 
+void updatePlayerOrientation(signed char horizontalInput)
+{
+	switch (playerOrientation)
+	{
+	case UP:
+		if (horizontalInput > 0)
+		{
+			playerOrientation = RIGHT;
+			printf("\tPlayer looks RIGHT.\n");
+		}
+		else
+		{
+			playerOrientation = LEFT;
+			printf("\tPlayer looks LEFT.\n");
+		}
+		break;
+	case DOWN:
+		if (horizontalInput > 0)
+		{
+			playerOrientation = LEFT;
+			printf("\tPlayer looks LEFT.\n");
+		}
+		else
+		{
+			playerOrientation = RIGHT;
+			printf("\tPlayer looks RIGHT.\n");
+		}
+		break;
+	case LEFT:
+		if (horizontalInput > 0)
+		{
+			playerOrientation = UP;
+			printf("\tPlayer looks UP.\n");
+		}
+		else
+		{
+			playerOrientation = DOWN;
+			printf("\tPlayer looks DOWN.\n");
+		}
+		break;
+	case RIGHT:
+		if (horizontalInput > 0)
+		{
+			playerOrientation = DOWN;
+			printf("\tPlayer looks DOWN.\n");
+		}
+		else
+		{
+			playerOrientation = UP;
+			printf("\tPlayer looks UP.\n");
+		}
+		break;
+	}
+}
+
+void updateRelativePositions()
+{
+	waterfallPositionFromPlayerPOV[0] = waterfallPosition[0] - playerPosition[0];
+	waterfallPositionFromPlayerPOV[1] = waterfallPosition[1] - playerPosition[1];
+
+	monsterPositionFromPlayerPOV[0] = monsterPosition[0] - playerPosition[0];
+	monsterPositionFromPlayerPOV[1] = monsterPosition[1] - playerPosition[1];
+
+	double x = waterfallPositionFromPlayerPOV[0];
+	double y = waterfallPositionFromPlayerPOV[1];
+	double waterfallAngle = atan2(y, x) * 180 / PI;
+
+	x = monsterPositionFromPlayerPOV[0];
+	y = monsterPositionFromPlayerPOV[1];
+	double monsterAngle = atan2(y, x) * 180 / PI;
+
+	switch (playerOrientation)
+	{
+	case UP:
+		waterfallAngleFromPlayerPOV = -waterfallAngle + 90;
+		monsterAngleFromPlayerPOV = -monsterAngle + 90;
+		break;
+	case DOWN:
+		waterfallAngleFromPlayerPOV = -waterfallAngle - 90;
+		monsterAngleFromPlayerPOV = -monsterAngle - 90;
+		break;
+	case LEFT:
+		waterfallAngleFromPlayerPOV = -waterfallAngle + 180;
+		monsterAngleFromPlayerPOV = -monsterAngle + 180;
+		break;
+	case RIGHT:
+		waterfallAngleFromPlayerPOV = -waterfallAngle;
+		monsterAngleFromPlayerPOV = -monsterAngle;
+		break;
+	}
+	printf("\t\twaterfallAngleFromPlayerPOV: %f\n", waterfallAngleFromPlayerPOV);
+	printf("\t\tmonsterAngleFromPlayerPOV: %f\n", monsterAngleFromPlayerPOV);
+}
+
 void update()
 {
 	//TODO handle input.
@@ -225,6 +334,11 @@ void update()
 	if (horizontalInput != 0)
 	{
 		printf("Horizontal input: %d\n", horizontalInput);
+		
+		updatePlayerOrientation(horizontalInput);
+
+		updateRelativePositions();
+
 		horizontalInput = 0;
 	}
 	else if (upInput)
@@ -234,26 +348,46 @@ void update()
 
 		unsigned short targetPosition[2];
 
-		if (playerForward[0] == 1)
+		switch (playerOrientation)
 		{
-			targetPosition[0] = playerPosition[0] + 1;
-			targetPosition[1] = playerPosition[1];
-		}
-		else if (playerForward[0] == -1)
-		{
-			targetPosition[0] = playerPosition[0] - 1;
-			targetPosition[1] = playerPosition[1];
-		}
-		else if (playerForward[1] == 1)
-		{
+		case UP:
 			targetPosition[0] = playerPosition[0];
 			targetPosition[1] = playerPosition[1] + 1;
-		}
-		else if (playerForward[1] == -1)
-		{
+			break;
+		case DOWN:
 			targetPosition[0] = playerPosition[0];
 			targetPosition[1] = playerPosition[1] - 1;
+			break;
+		case LEFT:
+			targetPosition[0] = playerPosition[0] - 1;
+			targetPosition[1] = playerPosition[1];
+			break;
+		case RIGHT:
+			targetPosition[0] = playerPosition[0] + 1;
+			targetPosition[1] = playerPosition[1];
+			break;
 		}
+
+		//if (playerForward[0] == 1)
+		//{
+		//	targetPosition[0] = playerPosition[0] + 1;
+		//	targetPosition[1] = playerPosition[1];
+		//}
+		//else if (playerForward[0] == -1)
+		//{
+		//	targetPosition[0] = playerPosition[0] - 1;
+		//	targetPosition[1] = playerPosition[1];
+		//}
+		//else if (playerForward[1] == 1)
+		//{
+		//	targetPosition[0] = playerPosition[0];
+		//	targetPosition[1] = playerPosition[1] + 1;
+		//}
+		//else if (playerForward[1] == -1)
+		//{
+		//	targetPosition[0] = playerPosition[0];
+		//	targetPosition[1] = playerPosition[1] - 1;
+		//}
 
 		if (walls[targetPosition[0]][targetPosition[1]])
 		{
