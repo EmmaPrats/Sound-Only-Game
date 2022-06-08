@@ -65,12 +65,19 @@ bool walls[10][10] =
 	true,  true,  true,  true,  true,  true,  true,  true,  true,  true
 };
 
-short waterfallPosition[2] = { 8, 1 };
+unsigned char waterfallPosition[2] = { 8, 1 };
 
-short playerPosition[2];
-short playerForward[2];
+unsigned char playerPosition[2];
+unsigned char playerForward[2];
 
-short monsterPosition[2];
+unsigned char monsterPosition[2];
+
+////////////////////////////
+
+////////// INPUT ///////////
+
+bool upInput = false;
+signed char horizontalInput = 0;
 
 ////////////////////////////
 
@@ -104,10 +111,17 @@ int main(int argc, char* args[])
 			//Handle events on queue
 			while (SDL_PollEvent(&e) != 0)
 			{
+				SDL_Scancode key = e.key.keysym.scancode;
 				if (e.type == SDL_KEYDOWN)
 				{
-					if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+					if (key == SDL_SCANCODE_ESCAPE)
 						quit = true;
+					if (key == SDL_SCANCODE_W || key == SDL_SCANCODE_UP)
+						upInput = true;
+					if (key == SDL_SCANCODE_A || key == SDL_SCANCODE_LEFT)
+						horizontalInput = -1;
+					if (key == SDL_SCANCODE_D || key == SDL_SCANCODE_RIGHT)
+						horizontalInput = 1;
 				}
 				if (e.type == SDL_QUIT)
 				{
@@ -204,7 +218,17 @@ void initMusic()
 
 void update()
 {
-
+	//TODO handle input.
+	if (upInput)
+	{
+		printf("Up input.\n");
+		upInput = false;
+	}
+	if (horizontalInput != 0)
+	{
+		printf("Horizontal input: %d\n", horizontalInput);
+		horizontalInput = 0;
+	}
 }
 
 void waitForNextFrame()
