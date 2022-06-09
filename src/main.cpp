@@ -4,9 +4,6 @@
 #include <string>
 #include <cmath>
 
-#include "vector.h"
-#include "matrix.h"
-
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
@@ -40,6 +37,13 @@ Mix_Chunk* stepHumanSound;
 Mix_Chunk* stepMonsterSound;
 Mix_Chunk* victorySound;
 Mix_Chunk* waterfallSound;
+
+int deathSoundDurationMs;
+int gameOverSoundDurationMs;
+int hitWallSoundDurationMs;
+int stepHumanSoundDurationMs;
+int stepMonsterSoundDurationMs;
+int victorySoundDurationMs;
 
 int deathSoundChannel;
 int gameOverSoundChannel;
@@ -97,14 +101,13 @@ signed char horizontalInput = 0;
 
 bool initSDL();
 void init3D();
-void initMusic();
+bool initMusic();
 void update();
 void waitForNextFrame();
 void close();
 
 void updatePlayerOrientation(signed char horizontalInput);
 void updateRelativePositions();
-
 void updateSounds();
 
 float changedInScale(float value, float oldMin, float oldMax, float newMin, float newMax)
@@ -127,7 +130,11 @@ int main(int argc, char* args[])
 	else
 	{
 		init3D();
-		initMusic();
+		if (!initMusic())
+		{
+			close();
+			return 1;
+		}
 
 		//Main loop flag
 		bool quit = false;
@@ -212,7 +219,7 @@ void init3D()
 	updateRelativePositions();
 }
 
-void initMusic()
+bool initMusic()
 {
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024); //or 4096?
 	Mix_Init(MIX_INIT_OGG);
@@ -227,28 +234,68 @@ void initMusic()
 	waterfallSound = Mix_LoadWAV(waterfallSoundFile);
 
 	if (!deathSound)
+	{
 		std::cout << "Error loading \"" << deathSoundFile << "\"." << std::endl;
+		return false;
+	}
 	if (!gameOverSound)
+	{
 		std::cout << "Error loading \"" << gameOverSoundFile << "\"." << std::endl;
+		return false;
+	}
 	if (!monsterSnoringSound)
+	{
 		std::cout << "Error loading \"" << monsterSnoringSoundFile << "\"." << std::endl;
+		return false;
+	}
 	if (!hitWallSound)
+	{
 		std::cout << "Error loading \"" << hitWallSoundFile << "\"." << std::endl;
+		return false;
+	}
 	if (!stepHumanSound)
+	{
 		std::cout << "Error loading \"" << stepHumanSoundFile << "\"." << std::endl;
+		return false;
+	}
 	if (!stepMonsterSound)
+	{
 		std::cout << "Error loading \"" << stepMonsterSoundFile << "\"." << std::endl;
+		return false;
+	}
 	if (!victorySound)
+	{
 		std::cout << "Error loading \"" << victorySoundFile << "\"." << std::endl;
+		return false;
+	}
 	if (!waterfallSound)
+	{
 		std::cout << "Error loading \"" << waterfallSoundFile << "\"." << std::endl;
+		return false;
+	}
+
+	// http://forums.libsdl.org/viewtopic.php?p=43437
+	// For 44k 16-bit stereo audio:
+	// durationMs = alen / ((44100 * 2(bytes) * 2(stereo)) / 1000)
+	deathSoundDurationMs = deathSound->alen / 176.4;
+	gameOverSoundDurationMs = gameOverSound->alen / 176.4;
+	hitWallSoundDurationMs = hitWallSound->alen / 176.4;
+	stepHumanSoundDurationMs = stepHumanSound->alen / 176.4;
+	stepMonsterSoundDurationMs = stepMonsterSound->alen / 176.4;
+	victorySoundDurationMs = victorySound->alen / 176.4;
 
 	waterfallSoundChannel = Mix_PlayChannel(-1, waterfallSound, -1);
 	monsterSnoringSoundChannel = Mix_PlayChannel(-1, monsterSnoringSound, -1);
 
 	Mix_Volume(waterfallSoundChannel, 64);
 
+	//http://forums.libsdl.org/viewtopic.php?p=43437
+	float duration = waterfallSound->alen / 176.4; //alen/((44100*2(bytes)*2(stereo))/1000)
+	printf("waterfallSound duration: %f s", duration / 1000.0);
+
 	updateSounds();
+
+	return true;
 }
 
 void update()
