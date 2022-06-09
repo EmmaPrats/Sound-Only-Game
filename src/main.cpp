@@ -61,6 +61,9 @@ int waterfallSoundChannel = -1;
 //Main loop flag
 bool quit = false;
 
+bool hitWall = false;
+bool monsterMoving = false;
+
 bool isDead = false;
 bool hasWon = false;
 bool hasLost = false;
@@ -355,6 +358,25 @@ void update()
 		return;
 	}
 
+	if (hitWall)
+	{
+		hitWall = false;
+		Mix_HaltChannel(monsterSnoringSoundChannel);
+		moveMonsterToRandomAdjacentPosition();
+		stepMonsterSoundChannel = Mix_PlayChannel(stepMonsterSoundChannel, stepMonsterSound, 0);
+		monsterMoving = true;
+		ticksToWait = stepMonsterSoundDurationMs;
+		updateRelativePositions();
+		updateSounds();
+		return;
+	}
+
+	if (monsterMoving)
+	{
+		monsterMoving = false;
+		monsterSnoringSoundChannel = Mix_PlayChannel(monsterSnoringSoundChannel, monsterSnoringSound, -1);
+	}
+
 	if (playerPosition[0] == monsterPosition[0] &&
 		playerPosition[1] == monsterPosition[1])
 	{
@@ -432,7 +454,7 @@ void update()
 
 			ticksToWait = hitWallSoundDurationMs;
 
-			moveMonsterToRandomAdjacentPosition();
+			hitWall = true;
 		}
 		else
 		{
