@@ -361,7 +361,6 @@ void update()
 	if (hitWall)
 	{
 		hitWall = false;
-		Mix_HaltChannel(monsterSnoringSoundChannel);
 		moveMonsterToRandomAdjacentPosition();
 		stepMonsterSoundChannel = Mix_PlayChannel(stepMonsterSoundChannel, stepMonsterSound, 0);
 		monsterMoving = true;
@@ -450,6 +449,7 @@ void update()
 		{
 			printf("\tTarget position (%d, %d) is a wall.\n", targetPosition[0], targetPosition[1]);
 
+			Mix_HaltChannel(monsterSnoringSoundChannel);
 			hitWallSoundChannel = Mix_PlayChannel(hitWallSoundChannel, hitWallSound, 0);
 
 			ticksToWait = hitWallSoundDurationMs;
