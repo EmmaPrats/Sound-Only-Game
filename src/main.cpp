@@ -343,6 +343,8 @@ void update()
 	if (isDead)
 	{
 		hasLost = true;
+		Mix_HaltChannel(waterfallSoundChannel);
+		Mix_HaltChannel(monsterSnoringSoundChannel);
 		gameOverSoundChannel = Mix_PlayChannel(gameOverSoundChannel, gameOverSound, 0);
 		ticksToWait = gameOverSoundDurationMs;
 		return;
@@ -354,6 +356,7 @@ void update()
 		isDead = true;
 		printf("Monster ate player.\n");
 
+		Mix_HaltChannel(monsterSnoringSoundChannel);
 		deathSoundChannel = Mix_PlayChannel(deathSoundChannel, deathSound, 0);
 
 		ticksToWait = deathSoundDurationMs;
@@ -366,6 +369,8 @@ void update()
 		hasWon = true;
 		printf("Player arrived to exit.\n");
 
+		Mix_HaltChannel(waterfallSoundChannel);
+		Mix_HaltChannel(monsterSnoringSoundChannel);
 		victorySoundChannel = Mix_PlayChannel(victorySoundChannel, victorySound, 0);
 
 		ticksToWait = victorySoundDurationMs;
@@ -421,6 +426,8 @@ void update()
 			hitWallSoundChannel = Mix_PlayChannel(hitWallSoundChannel, hitWallSound, 0);
 
 			ticksToWait = hitWallSoundDurationMs;
+
+			//TODO move monster to a random adjacent position.
 		}
 		else
 		{
