@@ -69,9 +69,12 @@ bool hasLost = false;
 
 ///////// GEOMETRY /////////
 
+const int ROWS = 10;
+const int COLS = 10;
+
 // True if wall, false if no wall.
 // walls[0][0] is bottom left corner, walls[9][0] is bottom right corner.
-bool walls[10][10] =
+bool walls[COLS][ROWS] =
 {
 	true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
 	true, false, false, false, false, false, false, false, false,  true,
@@ -125,6 +128,8 @@ void close();
 void updatePlayerOrientation(signed char horizontalInput);
 void updateRelativePositions();
 void updateSounds();
+
+void moveMonsterToRandomAdjacentPosition();
 
 float changedInScale(float value, float oldMin, float oldMax, float newMin, float newMax)
 {
@@ -427,7 +432,7 @@ void update()
 
 			ticksToWait = hitWallSoundDurationMs;
 
-			//TODO move monster to a random adjacent position.
+			moveMonsterToRandomAdjacentPosition();
 		}
 		else
 		{
@@ -565,6 +570,53 @@ void updateSounds()
 		monsterDistance,
 		monsterSoundDistance);
 	Mix_SetPosition(monsterSnoringSoundChannel, monsterAngle, monsterSoundDistance);
+}
+
+void moveMonsterToRandomAdjacentPosition()
+{
+	bool moved = false;
+	while (!moved)
+	{
+		char random = rand() % 4;
+		int newPosition;
+		switch (random)
+		{
+		case 0: //up
+			newPosition = monsterPosition[1] + 1;
+			if (newPosition < ROWS && !walls[monsterPosition[0]][newPosition])
+			{
+				monsterPosition[1] = newPosition;
+				moved = true;
+			}
+			break;
+		case 1: //down
+			newPosition = monsterPosition[1] - 1;
+			if (newPosition >= 0 && !walls[monsterPosition[0]][newPosition])
+			{
+				monsterPosition[1] = newPosition;
+				moved = true;
+			}
+			break;
+		case 2: //right
+			newPosition = monsterPosition[0] + 1;
+			if (newPosition < COLS && !walls[newPosition][monsterPosition[1]])
+			{
+				monsterPosition[0] = newPosition;
+				moved = true;
+			}
+			break;
+			break;
+		case 3: //left
+			newPosition = monsterPosition[0] - 1;
+			if (newPosition >= 0 && !walls[newPosition][monsterPosition[1]])
+			{
+				monsterPosition[0] = newPosition;
+				moved = true;
+			}
+			break;
+		}
+	}
+	printf("\tMonster moved to (%d, %d).\n", monsterPosition[0], monsterPosition[1]);
 }
 
 void close()
