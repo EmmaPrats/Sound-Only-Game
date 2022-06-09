@@ -99,11 +99,16 @@ signed char horizontalInput = 0;
 
 ////////////////////////////
 
+///////// TIMINGS //////////
+
+int ticksToWait = 0;
+
+////////////////////////////
+
 bool initSDL();
 void init3D();
 bool initMusic();
 void update();
-void waitForNextFrame();
 void close();
 
 void updatePlayerOrientation(signed char horizontalInput);
@@ -144,6 +149,9 @@ int main(int argc, char* args[])
 
 		while (!quit)
 		{
+			currentTime = SDL_GetTicks();
+			deltaTime = currentTime - lastTime;
+
 			//Handle events on queue
 			while (SDL_PollEvent(&e) != 0)
 			{
@@ -169,7 +177,10 @@ int main(int argc, char* args[])
 			
 			SDL_UpdateWindowSurface(window);
 
-			waitForNextFrame();
+			if (deltaTime < (int)msFrame)
+				SDL_Delay((int)msFrame - deltaTime);
+
+			lastTime = currentTime;
 		}
 	}
 
@@ -298,8 +309,56 @@ bool initMusic()
 	return true;
 }
 
+bool isDead = false;
+bool hasWon = false;
+
 void update()
 {
+	ticksToWait -= deltaTime;
+
+	if (ticksToWait > 0)
+	{
+		horizontalInput = 0;
+		upInput = false;
+		return;
+	}
+
+	if (isDead)
+	{
+		printf("Game ended. Player lost.\n");
+		return;
+	}
+
+	if (hasWon)
+	{
+		printf("Game ended. Player won.\n");
+		return;
+	}
+
+	if (playerPosition[0] == monsterPosition[0] &&
+		playerPosition[1] == monsterPosition[1])
+	{
+		isDead = true;
+		printf("Monster ate player.\n");
+
+		deathSoundChannel = Mix_PlayChannel(-1, deathSound, 0);
+
+		ticksToWait = deathSoundDurationMs;
+		return;
+	}
+
+	if (playerPosition[0] == waterfallPosition[0] &&
+		playerPosition[1] == waterfallPosition[1])
+	{
+		hasWon = true;
+		printf("Player arrived to exit.\n");
+
+		victorySoundChannel = Mix_PlayChannel(-1, victorySound, 0);
+
+		ticksToWait = victorySoundDurationMs;
+		return;
+	}
+
 	//Handling horizontal input first because it's less punishing.
 	if (horizontalInput != 0)
 	{
@@ -310,6 +369,8 @@ void update()
 		updateRelativePositions();
 
 		updateSounds();
+
+		ticksToWait = 1000;
 
 		horizontalInput = 0;
 	}
@@ -343,6 +404,10 @@ void update()
 		if (walls[targetPosition[0]][targetPosition[1]])
 		{
 			printf("\tTarget position (%d, %d) is a wall.\n", targetPosition[0], targetPosition[1]);
+
+			hitWallSoundChannel = Mix_PlayChannel(-1, hitWallSound, 0);
+
+			ticksToWait = hitWallSoundDurationMs;
 		}
 		else
 		{
@@ -350,22 +415,14 @@ void update()
 			playerPosition[1] = targetPosition[1];
 			printf("\tPlayer moved to (%d, %d)\n", playerPosition[0], playerPosition[1]);
 
-			if (playerPosition[0] == monsterPosition[0] &&
-				playerPosition[1] == monsterPosition[1])
-			{
-				printf("Monster ate player.\n");
-			}
-			else if (playerPosition[0] == waterfallPosition[0] &&
-				playerPosition[1] == waterfallPosition[1])
-			{
-				printf("Player arrived to exit.\n");
-			}
+			stepHumanSoundChannel = Mix_PlayChannel(-1, stepHumanSound, 0);
+
+			ticksToWait = stepHumanSoundDurationMs;
 		}
 
 		updateSounds();
 	}
 }
-
 
 void updatePlayerOrientation(signed char horizontalInput)
 {
@@ -472,15 +529,6 @@ void updateSounds()
 		monsterPositionFromPlayerPOV[0] * monsterPositionFromPlayerPOV[0] +
 		monsterPositionFromPlayerPOV[1] * monsterPositionFromPlayerPOV[1]);
 	Mix_SetPosition(monsterSnoringSoundChannel, monsterAngleFromPlayerPOV + 360, getDistance(monsterDistance));
-}
-
-void waitForNextFrame()
-{
-	currentTime = SDL_GetTicks();
-	deltaTime = currentTime - lastTime;
-	if (deltaTime < (int)msFrame)
-		SDL_Delay((int)msFrame - deltaTime);
-	lastTime = currentTime;
 }
 
 void close()
