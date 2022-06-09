@@ -250,7 +250,7 @@ void init3D()
 
 bool initMusic()
 {
-	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024); //or 4096?
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
 	Mix_Init(MIX_INIT_OGG);
 
 	deathSound = Mix_LoadWAV(deathSoundFile);
@@ -313,10 +313,12 @@ bool initMusic()
 	stepMonsterSoundDurationMs = stepMonsterSound->alen / 176.4;
 	victorySoundDurationMs = victorySound->alen / 176.4;
 
-	waterfallSoundChannel = Mix_PlayChannel(waterfallSoundChannel, waterfallSound, -1);
 	monsterSnoringSoundChannel = Mix_PlayChannel(monsterSnoringSoundChannel, monsterSnoringSound, -1);
+	waterfallSoundChannel = Mix_PlayChannel(waterfallSoundChannel, waterfallSound, -1);
 
-	Mix_Volume(waterfallSoundChannel, 64);
+	//Equalizing volumes:
+	Mix_Volume(monsterSnoringSoundChannel, 64);
+	Mix_Volume(waterfallSoundChannel, 16);
 
 	updateSounds();
 
