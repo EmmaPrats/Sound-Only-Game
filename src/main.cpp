@@ -45,14 +45,25 @@ int stepHumanSoundDurationMs;
 int stepMonsterSoundDurationMs;
 int victorySoundDurationMs;
 
-int deathSoundChannel;
-int gameOverSoundChannel;
-int monsterSnoringSoundChannel;
-int hitWallSoundChannel;
-int stepHumanSoundChannel;
-int stepMonsterSoundChannel;
-int victorySoundChannel;
-int waterfallSoundChannel;
+int deathSoundChannel = -1;
+int gameOverSoundChannel = -1;
+int monsterSnoringSoundChannel = -1;
+int hitWallSoundChannel = -1;
+int stepHumanSoundChannel = -1;
+int stepMonsterSoundChannel = -1;
+int victorySoundChannel = -1;
+int waterfallSoundChannel = -1;
+
+////////////////////////////
+
+////////// STATE ///////////
+
+//Main loop flag
+bool quit = false;
+
+bool isDead = false;
+bool hasWon = false;
+bool hasLost = false;
 
 ////////////////////////////
 
@@ -122,7 +133,7 @@ float changedInScale(float value, float oldMin, float oldMax, float newMin, floa
 
 Uint8 getDistance(float distance)
 {
-	return changedInScale(distance, 0, diagonal, 0, 255);
+	return changedInScale(distance, 1, diagonal, 0, 255);
 }
 
 int main(int argc, char* args[])
@@ -141,8 +152,7 @@ int main(int argc, char* args[])
 			return 1;
 		}
 
-		//Main loop flag
-		bool quit = false;
+		quit = false;
 
 		//Event handler
 		SDL_Event e;
@@ -295,22 +305,15 @@ bool initMusic()
 	stepMonsterSoundDurationMs = stepMonsterSound->alen / 176.4;
 	victorySoundDurationMs = victorySound->alen / 176.4;
 
-	waterfallSoundChannel = Mix_PlayChannel(-1, waterfallSound, -1);
-	monsterSnoringSoundChannel = Mix_PlayChannel(-1, monsterSnoringSound, -1);
+	waterfallSoundChannel = Mix_PlayChannel(waterfallSoundChannel, waterfallSound, -1);
+	monsterSnoringSoundChannel = Mix_PlayChannel(monsterSnoringSoundChannel, monsterSnoringSound, -1);
 
 	Mix_Volume(waterfallSoundChannel, 64);
-
-	//http://forums.libsdl.org/viewtopic.php?p=43437
-	float duration = waterfallSound->alen / 176.4; //alen/((44100*2(bytes)*2(stereo))/1000)
-	printf("waterfallSound duration: %f s", duration / 1000.0);
 
 	updateSounds();
 
 	return true;
 }
-
-bool isDead = false;
-bool hasWon = false;
 
 void update()
 {
@@ -323,15 +326,25 @@ void update()
 		return;
 	}
 
-	if (isDead)
-	{
-		printf("Game ended. Player lost.\n");
-		return;
-	}
-
 	if (hasWon)
 	{
 		printf("Game ended. Player won.\n");
+		quit = true;
+		return;
+	}
+
+	if (hasLost)
+	{
+		printf("Game ended. Player lost.\n");
+		quit = true;
+		return;
+	}
+
+	if (isDead)
+	{
+		hasLost = true;
+		gameOverSoundChannel = Mix_PlayChannel(gameOverSoundChannel, gameOverSound, 0);
+		ticksToWait = gameOverSoundDurationMs;
 		return;
 	}
 
@@ -341,7 +354,7 @@ void update()
 		isDead = true;
 		printf("Monster ate player.\n");
 
-		deathSoundChannel = Mix_PlayChannel(-1, deathSound, 0);
+		deathSoundChannel = Mix_PlayChannel(deathSoundChannel, deathSound, 0);
 
 		ticksToWait = deathSoundDurationMs;
 		return;
@@ -353,7 +366,7 @@ void update()
 		hasWon = true;
 		printf("Player arrived to exit.\n");
 
-		victorySoundChannel = Mix_PlayChannel(-1, victorySound, 0);
+		victorySoundChannel = Mix_PlayChannel(victorySoundChannel, victorySound, 0);
 
 		ticksToWait = victorySoundDurationMs;
 		return;
@@ -405,7 +418,7 @@ void update()
 		{
 			printf("\tTarget position (%d, %d) is a wall.\n", targetPosition[0], targetPosition[1]);
 
-			hitWallSoundChannel = Mix_PlayChannel(-1, hitWallSound, 0);
+			hitWallSoundChannel = Mix_PlayChannel(hitWallSoundChannel, hitWallSound, 0);
 
 			ticksToWait = hitWallSoundDurationMs;
 		}
@@ -415,10 +428,12 @@ void update()
 			playerPosition[1] = targetPosition[1];
 			printf("\tPlayer moved to (%d, %d)\n", playerPosition[0], playerPosition[1]);
 
-			stepHumanSoundChannel = Mix_PlayChannel(-1, stepHumanSound, 0);
+			stepHumanSoundChannel = Mix_PlayChannel(stepHumanSoundChannel, stepHumanSound, 0);
 
 			ticksToWait = stepHumanSoundDurationMs;
 		}
+
+		updateRelativePositions();
 
 		updateSounds();
 	}
@@ -520,15 +535,29 @@ void updateRelativePositions()
 
 void updateSounds()
 {
+	Sint16 waterfallAngle = waterfallAngleFromPlayerPOV + 360;
 	float waterfallDistance = sqrt(
 		waterfallPositionFromPlayerPOV[0] * waterfallPositionFromPlayerPOV[0] +
 		waterfallPositionFromPlayerPOV[1] * waterfallPositionFromPlayerPOV[1]);
-	Mix_SetPosition(waterfallSoundChannel, waterfallAngleFromPlayerPOV + 360, getDistance(waterfallDistance));
+	Uint8 waterfallSoundDistance = getDistance(waterfallDistance);
+	printf(
+		"\t\t\tWaterfall is at %f degrees and %f units (%d) from player.\n",
+		waterfallAngleFromPlayerPOV,
+		waterfallDistance,
+		waterfallSoundDistance);
+	Mix_SetPosition(waterfallSoundChannel, waterfallAngle, waterfallSoundDistance);
 
+	Sint16 monsterAngle = monsterAngleFromPlayerPOV + 360;
 	float monsterDistance = sqrt(
 		monsterPositionFromPlayerPOV[0] * monsterPositionFromPlayerPOV[0] +
 		monsterPositionFromPlayerPOV[1] * monsterPositionFromPlayerPOV[1]);
-	Mix_SetPosition(monsterSnoringSoundChannel, monsterAngleFromPlayerPOV + 360, getDistance(monsterDistance));
+	Uint8 monsterSoundDistance = getDistance(monsterDistance);
+	printf(
+		"\t\t\tMonster is at %f degrees and %f units (%d) from player.\n",
+		monsterAngleFromPlayerPOV,
+		monsterDistance,
+		monsterSoundDistance);
+	Mix_SetPosition(monsterSnoringSoundChannel, monsterAngle, monsterSoundDistance);
 }
 
 void close()
